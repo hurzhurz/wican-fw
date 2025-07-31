@@ -81,6 +81,7 @@ typedef struct _device_config
 	char ble_status[32];
 	char sleep_status[32];
 	char sleep_volt[10];
+	char sleep_can[12];
 	char wakeup_volt[10];
 	char sleep_time[32];
 	char wakeup_time[32];
@@ -130,6 +131,7 @@ char *config_server_get_ap_pass(void);
 int8_t config_server_protocol(void);
 int config_server_ble_pass(void);
 int8_t config_server_get_sleep_config(void);
+int8_t config_server_get_sleep_can(void);
 //void config_server_set_ble_tempfn(char b);
 //char config_server_get_ble_tempfn(void);
 int8_t config_server_get_ble_config(void);

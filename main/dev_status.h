@@ -18,6 +18,7 @@ extern "C" {
 #define DEV_BLE_CONNECTED_BIT   BIT4
 #define DEV_SDCARD_MOUNTED_BIT  BIT5 
 #define DEV_SLEEP_WAKEUP_BIT    BIT6
+#define DEV_SLEEP_CAN_BUSY_BIT  BIT7
 
 // Initialize device status event group
 void dev_status_init(void);
