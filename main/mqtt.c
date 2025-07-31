@@ -77,6 +77,7 @@ static esp_mqtt_client_handle_t client = NULL;
 static char *device_id;
 static char mqtt_sub_topic[128];
 static char mqtt_status_topic[128];
+static char mqtt_voltage_topic[128];
 static char mqtt_cmd_topic[24];
 static char mqtt_rsp_topic[24];
 static uint8_t mqtt_led = 0;
@@ -610,6 +611,23 @@ void mqtt_publish(char *topic, char *data, int len, int qos, int retain)
     }
 }
 
+static void mqtt_voltage_task(void *pvParameters)
+{
+    while(1)
+    {
+        dev_status_wait_for_bits(DEV_AWAKE_BIT, portMAX_DELAY);
+        if(mqtt_connected())
+        {
+            static char voltage[32] = {0};
+            static float vbatt = 0;
+            sleep_mode_get_voltage(&vbatt);
+            sprintf(voltage, "{\"battery_voltage\": %f}", vbatt);
+            mqtt_publish(mqtt_voltage_topic, voltage, strlen(voltage), 0, 1);
+        }
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
 void mqtt_init(char* id, uint8_t connected_led, QueueHandle_t *xtx_queue)
 {
     xmqtt_semaphore = xSemaphoreCreateMutex();
@@ -646,6 +664,7 @@ void mqtt_init(char* id, uint8_t connected_led, QueueHandle_t *xtx_queue)
     strcpy(mqtt_sub_topic, config_server_get_mqtt_tx_topic());
     
     strcpy(mqtt_status_topic, config_server_get_mqtt_status_topic());
+    strcpy(mqtt_voltage_topic, config_server_get_mqtt_voltage_topic());
     sprintf(mqtt_cmd_topic, "wican/%s/cmd",device_id);
     sprintf(mqtt_rsp_topic, "wican/%s/cmd",device_id);
     ESP_LOGI(TAG, "device_id: %s, mqtt_cfg.uri: %s", device_id, mqtt_cfg.broker.address.uri);
@@ -655,5 +674,10 @@ void mqtt_init(char* id, uint8_t connected_led, QueueHandle_t *xtx_queue)
     client = esp_mqtt_client_init(&mqtt_cfg);
 
     xTaskCreate(mqtt_task, "mqtt_task", 1024*5, (void*)AF_INET, 5, NULL);
+
+    if(config_server_mqtt_voltage_en_config() && strlen(mqtt_voltage_topic))
+    {
+        xTaskCreate(mqtt_voltage_task, "mqtt_voltage_task", 4096, (void*)AF_INET, 5, NULL);
+    }
 }
 

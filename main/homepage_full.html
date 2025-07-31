@@ -723,6 +723,12 @@
                             <td><input type="text" id="mqtt_status_topic" name="mqtt_status_topic" value="" /></td>
                         </tr>
                         <tr>
+                            <td><label for="mqtt_voltage_topic"><b>Voltage Topic:</b></label></td>
+                            <td><input type="text" id="mqtt_voltage_topic" name="mqtt_voltage_topic" value="" /></td>
+                            <td><input type="checkbox" id="mqtt_voltage_en_checkbox" name="mqtt_voltage_en_checkbox" 
+                                    onchange="voltageCheckBoxChanged()"></td>
+                        </tr>
+                        <tr>
                             <td><label for="mqtt_elm327_log"><b>MQTT elm327 log:</b></label></td>
                             <td><select name="mqtt_elm327_log" style="width: 93px;" id="mqtt_elm327_log"
                                     onchange="alert_elm327()">
@@ -1297,6 +1303,14 @@
                 document.getElementById("mqtt_rx_topic").disabled = false;
             } else {
                 document.getElementById("mqtt_rx_topic").disabled = true;
+            }
+        }
+
+        function voltageCheckBoxChanged() {
+            if (document.getElementById("mqtt_voltage_en_checkbox").checked) {
+                document.getElementById("mqtt_voltage_topic").disabled = false;
+            } else {
+                document.getElementById("mqtt_voltage_topic").disabled = true;
             }
         }
 
@@ -2171,6 +2185,9 @@ function loadAutoTable(jsonData) {
 		}  else if(document.getElementById("mqtt_status_topic").value.length < 1 || document.getElementById("mqtt_status_topic").value.length > 32) {
             showNotification("MQTT Status Topic length, min=1 max=64", "red");
 			document.getElementById("submit_button").disabled = true;
+		}  else if(document.getElementById("mqtt_voltage_topic").value.length < 1 || document.getElementById("mqtt_voltage_topic").value.length > 32) {
+            showNotification("MQTT Voltage Topic length, min=1 max=64", "red");
+			document.getElementById("submit_button").disabled = true;
 		} else if(document.getElementById("tcp_port_value").value > 65535 || document.getElementById("tcp_port_value").value < 1) {
             showNotification("Port value, min=1 max=65535", "red");
 			document.getElementById("submit_button").disabled = true;
@@ -2435,6 +2452,12 @@ function loadAutoTable(jsonData) {
             obj["mqtt_rx_en"] = "disable";
         }
 		obj["mqtt_status_topic"] = document.getElementById("mqtt_status_topic").value;
+		obj["mqtt_voltage_topic"] = document.getElementById("mqtt_voltage_topic").value;
+        if(document.getElementById("mqtt_voltage_en_checkbox").checked){
+            obj["mqtt_voltage_en"] = "enable";
+        }else{
+            obj["mqtt_voltage_en"] = "disable";
+        }
 		obj["mqtt_elm327_log"] = document.getElementById("mqtt_elm327_log").value;
 		var configJSON = JSON.stringify(obj);
 		const xhttp = new XMLHttpRequest();
@@ -2710,8 +2733,20 @@ function loadAutoTable(jsonData) {
                 document.getElementById("mqtt_rx_topic").disabled = true;
             }
             
+            if ("mqtt_voltage_en" in obj) {
+                if (obj.mqtt_voltage_en === "enable") {
+                    document.getElementById("mqtt_voltage_en_checkbox").checked = true;
+                } else {
+                    document.getElementById("mqtt_voltage_en_checkbox").checked = false;
+                }
+            } else {
+                document.getElementById("mqtt_rx_en_checkbox").checked = false;
+                document.getElementById("mqtt_voltage_topic").disabled = true;
+            }
+            
 			txCheckBoxChanged();
             rxCheckBoxChanged();
+            voltageCheckBoxChanged();
 			document.getElementById("protocol").value = obj.protocol;
 			document.getElementById("tcp_port_value").value = obj.port;
 			document.getElementById("ap_pass_value").value = obj.ap_pass;
@@ -2740,6 +2775,7 @@ function loadAutoTable(jsonData) {
 			document.getElementById("mqtt_tx_topic").value = obj.mqtt_tx_topic;
 			document.getElementById("mqtt_rx_topic").value = obj.mqtt_rx_topic;
 			document.getElementById("mqtt_status_topic").value = obj.mqtt_status_topic;
+			document.getElementById("mqtt_voltage_topic").value = obj.mqtt_voltage_topic;
 			document.getElementById("mqtt_elm327_log").value = obj.mqtt_elm327_log;
 			if(obj.batt_alert_time == "1") {
 				document.getElementById("batt_alert_time").selectedIndex = "0";
