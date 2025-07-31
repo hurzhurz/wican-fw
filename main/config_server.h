@@ -100,6 +100,7 @@ typedef struct _device_config
 	char mqtt_en[10];
 	char mqtt_tx_en[10];
 	char mqtt_rx_en[10];
+	char mqtt_voltage_en[10];
 	char mqtt_url[256];
 	char mqtt_port[32];
 	char mqtt_user[64];
@@ -110,6 +111,7 @@ typedef struct _device_config
 	char mqtt_tx_topic[64];
 	char mqtt_rx_topic[64];
 	char mqtt_status_topic[64];
+	char mqtt_voltage_topic[64];
 }device_config_t;
 
 
@@ -162,8 +164,10 @@ int8_t config_server_mqtt_rx_individual_retain(void);
 char *config_server_get_mqtt_tx_topic(void);
 char *config_server_get_mqtt_rx_topic(void);
 char *config_server_get_mqtt_status_topic(void);
+char *config_server_get_mqtt_voltage_topic(void);
 int8_t config_server_mqtt_tx_en_config(void);
 int8_t config_server_mqtt_rx_en_config(void);
+int8_t config_server_mqtt_voltage_en_config(void);
 int8_t config_server_get_wakeup_volt(float *wakeup_volt);
 int8_t config_server_get_sleep_time(uint32_t *sleep_time);
 int8_t config_server_get_wakeup_time(uint32_t *wakeup_time);

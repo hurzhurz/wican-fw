@@ -109,7 +109,7 @@ static char can_datarate_str[11][7] = {
 								"1000K",
 };
 
-const char device_config_default[] = "{\"wifi_mode\":\"AP\",\"ap_ch\":\"6\",\"sta_ssid\":\"MeatPi\",\"sta_pass\":\"TomatoSauce\",\"sta_security\":\"wpa3\",\"can_datarate\":\"500K\",\"can_mode\":\"normal\",\"port_type\":\"tcp\",\"port\":\"3333\",\"ap_pass\":\"@meatpi#\",\"protocol\":\"slcan\",\"ble_pass\":\"123456\",\"ble_status\":\"disable\",\"sleep_status\":\"disable\",\"sleep_can\":\"disable\",\"sleep_volt\":\"13.1\",\"wakeup_volt\":\"13.5\",\"batt_alert\":\"disable\",\"batt_alert_ssid\":\"MeatPi\",\"batt_alert_pass\":\"TomatoSauce\",\"batt_alert_volt\":\"11.0\",\"batt_alert_protocol\":\"mqtt\",\"batt_alert_url\":\"mqtt://mqtt.eclipseprojects.io\",\"batt_alert_port\":\"1883\",\"batt_alert_topic\":\"CAR1/voltage\",\"batt_mqtt_user\":\"meatpi\",\"batt_mqtt_pass\":\"meatpi\",\"batt_alert_time\":\"1\",\"mqtt_en\":\"disable\",\"mqtt_elm327_log\":\"disable\",\"mqtt_rx_individual_en\":\"disable\",\"mqtt_rx_individual_retain\":\"disable\",\"mqtt_url\":\"mqtt://127.0.0.1\",\"mqtt_port\":\"1883\",\"mqtt_user\":\"meatpi\",\"mqtt_pass\":\"meatpi\",\"keep_alive\":\"30\",\"mqtt_tx_topic\":\"wican/%s/can/tx\",\"mqtt_rx_topic\":\"wican/%s/can/rx\",\"mqtt_status_topic\":\"wican/%s/can/status\"}";
+const char device_config_default[] = "{\"wifi_mode\":\"AP\",\"ap_ch\":\"6\",\"sta_ssid\":\"MeatPi\",\"sta_pass\":\"TomatoSauce\",\"sta_security\":\"wpa3\",\"can_datarate\":\"500K\",\"can_mode\":\"normal\",\"port_type\":\"tcp\",\"port\":\"3333\",\"ap_pass\":\"@meatpi#\",\"protocol\":\"slcan\",\"ble_pass\":\"123456\",\"ble_status\":\"disable\",\"sleep_status\":\"disable\",\"sleep_can\":\"disable\",\"sleep_volt\":\"13.1\",\"wakeup_volt\":\"13.5\",\"batt_alert\":\"disable\",\"batt_alert_ssid\":\"MeatPi\",\"batt_alert_pass\":\"TomatoSauce\",\"batt_alert_volt\":\"11.0\",\"batt_alert_protocol\":\"mqtt\",\"batt_alert_url\":\"mqtt://mqtt.eclipseprojects.io\",\"batt_alert_port\":\"1883\",\"batt_alert_topic\":\"CAR1/voltage\",\"batt_mqtt_user\":\"meatpi\",\"batt_mqtt_pass\":\"meatpi\",\"batt_alert_time\":\"1\",\"mqtt_en\":\"disable\",\"mqtt_elm327_log\":\"disable\",\"mqtt_rx_individual_en\":\"disable\",\"mqtt_rx_individual_retain\":\"disable\",\"mqtt_url\":\"mqtt://127.0.0.1\",\"mqtt_port\":\"1883\",\"mqtt_user\":\"meatpi\",\"mqtt_pass\":\"meatpi\",\"keep_alive\":\"30\",\"mqtt_tx_topic\":\"wican/%s/can/tx\",\"mqtt_rx_topic\":\"wican/%s/can/rx\",\"mqtt_status_topic\":\"wican/%s/can/status\",\"mqtt_voltage_topic\":\"wican/%s/can/voltage\"}";
 static device_config_t device_config;
 TimerHandle_t xrestartTimer;
 
@@ -1921,6 +1921,20 @@ static void config_server_load_cfg(char *cfg)
 	//*****
 
 	//*****
+	key = cJSON_GetObjectItem(root,"mqtt_voltage_en");
+	if(key == 0 || (strlen(key->valuestring) > sizeof(device_config.mqtt_voltage_en)))
+	{
+		strcpy(device_config.mqtt_voltage_en,"disable");
+	}
+	else
+	{
+		strcpy(device_config.mqtt_voltage_en, key->valuestring);
+	}
+
+	ESP_LOGE(TAG, "device_config.mqtt_voltage_en: %s", device_config.mqtt_voltage_en);
+	//*****
+
+	//*****
 	key = cJSON_GetObjectItem(root,"mqtt_rx_topic");
 	if(key == 0 || (strlen(key->valuestring) > sizeof(device_config.mqtt_rx_topic)) || strlen(key->valuestring) == 0)
 	{
@@ -1942,6 +1956,20 @@ static void config_server_load_cfg(char *cfg)
 
 	
 	ESP_LOGE(TAG, "device_config.mqtt_status_topic: %s", device_config.mqtt_status_topic);
+	//*****
+
+	//*****
+	key = cJSON_GetObjectItem(root,"mqtt_voltage_topic");
+	if(key == 0 || (strlen(key->valuestring) > sizeof(device_config.mqtt_voltage_topic)) || strlen(key->valuestring) == 0)
+	{
+		strcpy(device_config.mqtt_voltage_topic, "");
+	}
+	else
+	{
+		strcpy(device_config.mqtt_voltage_topic, key->valuestring);
+	}
+
+	ESP_LOGE(TAG, "device_config.mqtt_voltage_topic: %s", device_config.mqtt_voltage_topic);
 	//*****
 
 	//*****
@@ -2042,7 +2070,7 @@ config_error:
         unlink(FS_MOUNT_POINT"/config.json");
 		FILE* f = fopen(FS_MOUNT_POINT"/config.json", "w");
 		// sprintf(device_config_default, device_id, device_id);
-		fprintf(f, device_config_default, (char*)device_id, (char*)device_id, (char*)device_id);
+		fprintf(f, device_config_default, (char*)device_id, (char*)device_id, (char*)device_id, (char*)device_id);
 		fclose(f);
 		vTaskDelay(3000 / portTICK_PERIOD_MS);
 		esp_restart();
@@ -2179,7 +2207,7 @@ static httpd_handle_t config_server_init(void)
 			ESP_LOGI(TAG, "Config file does not exist, load default");
 			f = fopen(FS_MOUNT_POINT"/config.json", "w");
 //			fwrite(device_config_default , 1 , sizeof(device_config_default) , f );
-			fprintf(f, device_config_default, (char*)device_id, (char*)device_id, (char*)device_id);
+			fprintf(f, device_config_default, (char*)device_id, (char*)device_id, (char*)device_id, (char*)device_id);
 			fclose(f);
 			f = fopen(FS_MOUNT_POINT"/config.json", "r");
 		}
@@ -2601,6 +2629,19 @@ int8_t config_server_mqtt_rx_en_config(void)
 	return -1;
 }
 
+int8_t config_server_mqtt_voltage_en_config(void)
+{
+	if(strcmp(device_config.mqtt_voltage_en, "enable") == 0)
+	{
+		return 1;
+	}
+	else if(strcmp(device_config.mqtt_voltage_en, "disable") == 0)
+	{
+		return 0;
+	}
+	return -1;
+}
+
 int8_t config_server_mqtt_elm327_log(void)
 {
 	if(strcmp(device_config.mqtt_elm327_log, "enable") == 0)
@@ -2679,6 +2720,11 @@ char *config_server_get_mqtt_rx_topic(void)
 char *config_server_get_mqtt_status_topic(void)
 {
 	return device_config.mqtt_status_topic;
+}
+
+char *config_server_get_mqtt_voltage_topic(void)
+{
+	return device_config.mqtt_voltage_topic;
 }
 
 char *config_server_get_mqtt_canflt(void)
